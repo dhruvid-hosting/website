@@ -1,0 +1,24 @@
+'use client'
+import { createContext, useContext, useEffect } from 'react';
+
+const ThemeContext = createContext();
+
+export function ThemeProvider({ children }) {
+  useEffect(() => {
+    document.body.classList.add('light-mode');
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ isDark: false, toggleTheme: () => {} }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}
