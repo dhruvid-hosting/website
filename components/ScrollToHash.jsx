@@ -10,6 +10,7 @@ export default function ScrollToHash() {
     const hash = window.location.hash
     if (!hash) return
     const id = hash.replace('#', '')
+    if (!/^[a-zA-Z0-9_-]+$/.test(id)) return
     const timer = setTimeout(() => {
       const el = document.getElementById(id)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })

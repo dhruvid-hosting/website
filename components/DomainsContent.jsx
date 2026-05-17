@@ -123,9 +123,12 @@ function ResultCard({ result, symbol }) {
           <span />
         )}
         {available && (
-          <button
-            onClick={() => router.push(registerPath(domain.split(".")[0], tld, isPremium))}
+          <a
+            href="https://manage.dhruvid.com"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
+              display: "inline-block",
               padding: "0.45rem 1rem",
               background: "#c9a84c",
               border: "none",
@@ -136,10 +139,11 @@ function ResultCard({ result, symbol }) {
               cursor: "pointer",
               whiteSpace: "nowrap",
               fontFamily: "inherit",
+              textDecoration: "none",
             }}
           >
             Register →
-          </button>
+          </a>
         )}
         {!available && (
           <span style={{ fontSize: "12px", color: "#4a5568" }}>Not available</span>

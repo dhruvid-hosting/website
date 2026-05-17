@@ -67,18 +67,22 @@ function VerifyContent() {
         </p>
 
         {/* Show verified email if present in URL */}
-        {email && (
-          <p
-            style={{
-              color: 'rgba(201,168,76,0.7)',
-              fontSize: '13px',
-              marginBottom: '2rem',
-              letterSpacing: '0.3px',
-            }}
-          >
-            {decodeURIComponent(email)}
-          </p>
-        )}
+        {(() => {
+          const decoded = decodeURIComponent(email ?? '')
+          const safeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(decoded) ? decoded : null
+          return safeEmail ? (
+            <p
+              style={{
+                color: 'rgba(201,168,76,0.7)',
+                fontSize: '13px',
+                marginBottom: '2rem',
+                letterSpacing: '0.3px',
+              }}
+            >
+              {safeEmail}
+            </p>
+          ) : null
+        })()}
 
         {/* CTA */}
         <Link

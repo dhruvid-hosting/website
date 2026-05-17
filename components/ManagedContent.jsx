@@ -156,7 +156,9 @@ function PlanCard({ plan, billingPeriod, currency, symbol }) {
           {plan.desc}
         </p>
         <a
-          href="/contact/?type=managed"
+          href="https://manage.dhruvid.com"
+          target="_blank"
+          rel="noopener noreferrer"
           onMouseEnter={() => setBtnHovered(true)}
           onMouseLeave={() => setBtnHovered(false)}
           style={{

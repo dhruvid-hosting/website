@@ -436,12 +436,91 @@ function StepOptions({ data, onChange, retail, symbol, onNext, onBack }) {
   )
 }
 
-// ── Step 4: Review + submit ───────────────────────────────────────────────────
-function StepReview({ domain, tld, contact, options, retail, symbol, onConfirm, onBack, loading }) {
+// ── Upsell cards data ─────────────────────────────────────────────────────────
+const DOMAIN_UPSELLS = [
+  {
+    id: 'hosting',
+    title: 'Add a Hosting Plan',
+    description: 'Get your website live today. Fast NVMe servers, one-click setup, and everything you need to launch.',
+    cta: 'Add Hosting',
+    href: '/hosting/',
+  },
+  {
+    id: 'mailbox',
+    title: 'Add a Professional Mailbox',
+    description: 'Email that matches your domain — look credible from day one with hello@yourdomain.com.',
+    cta: 'Add Mailbox',
+    href: '/contact/',
+  },
+  {
+    id: 'managed',
+    title: 'Go Fully Managed',
+    description: 'Never think about servers, updates, or downtime again. Our managed plans handle everything so you can focus on what you do best.',
+    cta: 'See Managed Plans',
+    href: '/managed/',
+  },
+]
+
+function UpsellSection({ added, onAdd }) {
+  return (
+    <div style={{ marginBottom: '2rem' }}>
+      <p style={{ fontSize: '11px', letterSpacing: '2px', color: '#c9a84c', marginBottom: '0.75rem' }}>COMPLETE YOUR SETUP</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {DOMAIN_UPSELLS.map((u) => {
+          const isAdded = added.includes(u.id)
+          return (
+            <div
+              key={u.id}
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: '1rem',
+                padding: '1rem 1.25rem',
+                background: isAdded ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${isAdded ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.07)'}`,
+                borderRadius: '12px',
+                transition: 'all 0.2s',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#f0ece0', marginBottom: '3px' }}>{u.title}</div>
+                <div style={{ fontSize: '12px', color: '#6b6150', lineHeight: 1.5 }}>{u.description}</div>
+              </div>
+              <button
+                onClick={() => onAdd(u)}
+                style={{
+                  flexShrink: 0,
+                  padding: '0.45rem 1rem',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: isAdded ? '#c9a84c' : 'transparent',
+                  border: isAdded ? '1px solid #c9a84c' : '1px solid rgba(201,168,76,0.4)',
+                  color: isAdded ? '#09111f' : '#c9a84c',
+                }}
+              >
+                {isAdded ? '✓ Added' : u.cta}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Step 4: Review + payment ──────────────────────────────────────────────────
+function StepReview({ domain, tld, contact, options, retail, symbol, onBack }) {
+  const [upsellAdded, setUpsellAdded] = useState([])
+  const [showPayModal, setShowPayModal] = useState(false)
+
   const totalPrice = retail
     ? options.period === 1
       ? retail.price
-      : Math.ceil(retail.price * 2 * 0.95)
+      : options.period === 2
+        ? Math.ceil(retail.price * 2 * 0.95)
+        : Math.ceil(retail.price * 3 * 0.90)
     : null
 
   const fmtPrice = (p) => p == null ? '—' : `${symbol}${retail?.currency === 'INR' ? p.toLocaleString('en-IN') : p}`
@@ -466,12 +545,19 @@ function StepReview({ domain, tld, contact, options, retail, symbol, onConfirm, 
     ['Auto-renew', options.autoRenew !== false ? 'On' : 'Off'],
   ]
 
+  const handleUpsellAdd = (upsell) => {
+    setUpsellAdded((prev) =>
+      prev.includes(upsell.id) ? prev.filter((id) => id !== upsell.id) : [...prev, upsell.id]
+    )
+  }
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-      <h2 style={{ fontFamily: "'Rosarivo', serif", color: '#f0ece0', marginBottom: '0.5rem' }}>Review Your Order</h2>
-      <p style={{ color: '#8a8678', fontSize: '13px', marginBottom: '1.75rem' }}>Double-check all details before confirming registration.</p>
+      <h2 style={{ fontFamily: "'Rosarivo', serif", color: '#f0ece0', marginBottom: '0.5rem' }}>Review & Payment</h2>
+      <p style={{ color: '#8a8678', fontSize: '13px', marginBottom: '1.75rem' }}>Confirm your order details before proceeding to payment.</p>
 
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.5rem' }}>
+      {/* Order summary */}
+      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.75rem' }}>
         {rows.map(([key, val], i) => (
           <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', padding: '0.75rem 1.25rem', borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '12px', color: '#6b6150', letterSpacing: '1px' }}>{key.toUpperCase()}</span>
@@ -480,18 +566,54 @@ function StepReview({ domain, tld, contact, options, retail, symbol, onConfirm, 
         ))}
       </div>
 
-      <div style={{ padding: '0.85rem 1rem', background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: '8px', fontSize: '12px', color: '#8a7040', marginBottom: '1.5rem', lineHeight: 1.6 }}>
-        ⚠ By confirming, you authorise Dhruvid to register this domain on your behalf. Ensure your account balance is sufficient before proceeding.
-      </div>
+      {/* Upsells */}
+      <UpsellSection added={upsellAdded} onAdd={handleUpsellAdd} />
 
+      {/* Nav + payment button */}
       <div style={{ display: 'flex', gap: '0.75rem' }}>
-        <button onClick={onBack} disabled={loading} style={{ flex: '0 0 auto', padding: '0.9rem 1.25rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#8a8678', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button onClick={onBack} style={{ flex: '0 0 auto', padding: '0.9rem 1.25rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#8a8678', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <ChevronLeft size={16} /> Back
         </button>
-        <button onClick={onConfirm} disabled={loading} style={{ flex: 1, padding: '0.9rem', background: '#c9a84c', border: 'none', borderRadius: '10px', color: '#09111f', fontSize: '15px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'inherit', opacity: loading ? 0.7 : 1 }}>
-          {loading ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Registering...</> : <>Confirm & Register</>}
+        <button
+          onClick={() => setShowPayModal(true)}
+          style={{ flex: 1, padding: '0.9rem', background: '#c9a84c', border: 'none', borderRadius: '10px', color: '#09111f', fontSize: '15px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'inherit' }}
+        >
+          Proceed to Payment <ChevronRight size={18} />
         </button>
       </div>
+
+      {/* Payment coming soon modal */}
+      <AnimatePresence>
+        {showPayModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowPayModal(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: '#0d1929', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '20px', padding: '2.5rem', maxWidth: '420px', width: '100%', textAlign: 'center' }}
+            >
+              <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔒</div>
+              <h3 style={{ fontFamily: "'Rosarivo', serif", color: '#f0ece0', marginBottom: '0.75rem', fontSize: '1.25rem' }}>Payment Gateway Coming Soon</h3>
+              <p style={{ color: '#8a8678', fontSize: '13px', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+                We're integrating a secure payment gateway. Once live, you'll be able to complete your purchase here. Your order details have been saved.
+              </p>
+              <button
+                onClick={() => setShowPayModal(false)}
+                style={{ padding: '0.75rem 2rem', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '8px', color: '#c9a84c', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -657,7 +779,7 @@ export default function DomainRegisterContent() {
               <StepOptions key="options" data={options} onChange={setOptions} retail={retail} symbol={symbol} onNext={() => setStep(3)} onBack={() => setStep(1)} />
             )}
             {step === 3 && (
-              <StepReview key="review" domain={domain} tld={tld} contact={contact} options={options} retail={retail} symbol={symbol} onConfirm={handleConfirm} onBack={() => setStep(2)} loading={loading} />
+              <StepReview key="review" domain={domain} tld={tld} contact={contact} options={options} retail={retail} symbol={symbol} onBack={() => setStep(2)} />
             )}
             {step === 4 && (
               <StepDone key="done" result={result} error={regError} domain={domain} tld={tld} onRetry={() => setStep(3)} />
